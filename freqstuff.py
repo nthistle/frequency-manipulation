@@ -18,13 +18,29 @@ def findnote(freq):
             bestnote = notes[i][0]
     return bestnote
 
+
 ## returns magnitudes of each frequency
 def freqbreakdown(snd):
     f = np.fft.fft(snd)
     return [abs(x) for x in f[0:len(f)//2]]
 
 
-rate, sound = wavfile.read("song.wav")
+freqs = []
+
+rate, sound = wavfile.read("../song.wav")
+
+
+#test for extracting which frequencies / notes played at which time
 
 for i in range(1+((len(sound)-SAMPLE_SIZE)//MOVE_SIZE)):
     sample = sound[MOVE_SIZE*i:MOVE_SIZE*i+SAMPLE_SIZE]
+    freqs.append(freqbreakdown(sample))
+
+
+thresh = 500000
+multthresh = 2.0
+
+for i in range(1,len(freqs)):
+    for j in range(len(freqs[i])):
+        if freqs[i][j] > thresh and freqs[i][j] > multthresh * freqs[i-1][j]:
+            print("Frequency",int(1000*(j*rate/SAMPLE_SIZE))/1000.0,"played at time",int(1000*i*MOVE_SIZE/rate)/1000.0)
