@@ -24,8 +24,13 @@ def freqbreakdown(snd):
     f = np.fft.fft(snd)
     return [abs(x) for x in f[0:len(f)//2]]
 
+def rms(sample):
+    #root mean square
+    return np.mean([abs(x) for x in sample])
+
 
 freqs = []
+loudness = []
 
 rate, sound = wavfile.read("../song.wav")
 
@@ -35,12 +40,13 @@ rate, sound = wavfile.read("../song.wav")
 for i in range(1+((len(sound)-SAMPLE_SIZE)//MOVE_SIZE)):
     sample = sound[MOVE_SIZE*i:MOVE_SIZE*i+SAMPLE_SIZE]
     freqs.append(freqbreakdown(sample))
+    loudness.append(rms(sample))
 
 
 thresh = 500000
 multthresh = 2.0
 
-for i in range(1,len(freqs)):
+for i in range(1,len(freqs)-1):
     for j in range(len(freqs[i])):
-        if freqs[i][j] > thresh and freqs[i][j] > multthresh * freqs[i-1][j]:
-            print("Frequency",int(1000*(j*rate/SAMPLE_SIZE))/1000.0,"played at time",int(1000*i*MOVE_SIZE/rate)/1000.0)
+        if freqs[i][j] > thresh and freqs[i][j] > multthresh * freqs[i-1][j] and freqs[i][j] > freqs[i+1][j]:
+            print("Frequency",int(1000*(j*rate/SAMPLE_SIZE))/1000.0,"played at time",int(1000*i*MOVE_SIZE/rate)/1000.0,"   (Magnitude",int(100*np.log10(freqs[i][j]))/100.0,", RMS",int(100*np.log10(loudness[i]))/100.0,")")
